@@ -1,0 +1,11 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sombra -->
+    <item
+        android:drawable="@drawable/logo_memotori"
+        android:left="3dp"
+        android:top="30dp">
+    </item>
+
+    <!-- Imagen -->
+    <item android:drawable="@drawable/logo_memotori" />
+</layer-list>
