@@ -4,6 +4,8 @@
     <color name="white">#FFFFFFFF</color>
     <color name="gray">#AEACAC</color>
 
+    <color name="lowBlack">#8F000000</color>
+
     <color name="secundary_text">#F9EBB9</color>
     <color name="secundary">#E72D72</color>
     <color name="primary">#30B7BE</color>

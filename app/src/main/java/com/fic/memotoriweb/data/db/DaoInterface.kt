@@ -45,7 +45,7 @@ interface TarjetasDao{
 @Dao
 interface HorariosDao{
     @Query("SELECT * FROM Horarios")
-    fun getAllHorarios(): Flow<List<Horarios>>
+    fun getAllHorarios(): List<Horarios>
 
     @Insert
     fun insertHorario(horarios: Horarios)

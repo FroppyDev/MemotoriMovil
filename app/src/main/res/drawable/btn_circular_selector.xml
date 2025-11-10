@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- estado seleccionado -->
+    <item android:state_selected="true" android:drawable="@drawable/btn_circular_selected"/>
+
+    <!-- estado por defecto (no seleccionado) -->
+    <item android:drawable="@drawable/btn_circular_unselected"/>
+</selector>

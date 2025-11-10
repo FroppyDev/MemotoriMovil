@@ -6,4 +6,35 @@
     </style>
 
     <style name="Theme.MemotoriWeb" parent="Base.Theme.MemotoriWeb" />
+
+    <style name="CustomTimePickerDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Fondo del diálogo -->
+        <item name="android:windowBackground">@color/primary</item>
+
+        <!-- Texto principal (hora, título, etc.) -->
+        <item name="android:textColorPrimary">@android:color/white</item>
+
+        <!-- Color de los botones -->
+        <item name="android:buttonBarPositiveButtonStyle">@style/CustomTimePickerButton</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/CustomTimePickerButton</item>
+
+        <!-- Color de acento (aguja y resaltado del reloj circular) -->
+        <item name="android:colorAccent">@color/secundary</item>
+
+        <!-- (Opcional) Para Android 12+ -->
+        <item name="android:timePickerStyle">@style/CustomTimePickerWidget</item>
+    </style>
+
+    <style name="CustomTimePickerWidget" parent="android:Widget.Material.TimePicker">
+        <item name="android:headerAmPmTextAppearance">@android:color/white</item>
+        <item name="android:numbersSelectorColor">@color/secundary</item>
+        <item name="android:numbersTextColor">@android:color/white</item>
+        <!-- Fondo del encabezado (donde dice "Seleccionar hora") -->
+
+    </style>
+
+    <style name="CustomTimePickerButton" parent="@style/Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:backgroundTint">@color/secundary</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
 </resources>

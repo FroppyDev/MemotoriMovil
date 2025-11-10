@@ -121,9 +121,10 @@ data class Fotos(
 )
 
 enum class CategoriaColor(val color: Int?) {
-    ROJO(R.color.bg),
-    AZUL(R.color.bg2),
-    VERDE(R.color.bg3),
-    AMARILLO(R.color.bg4),
-    MORADO(R.color.bg5)
+    ROSA_BAJO(R.color.bg3),
+    MORADO(R.color.bg5),
+    ROJO(R.color.bg4),
+    NEGRO(R.color.bg7),
+    ROSA(R.color.bg6),
+    SECUNDARIO(R.color.secundary)
 }

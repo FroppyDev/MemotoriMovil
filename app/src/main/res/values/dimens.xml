@@ -7,4 +7,7 @@
 
 
     <dimen name="btnRedes">50dp</dimen>
+    <dimen name="btnDias">43dp</dimen>
+    <dimen name="btnDiasMargin">5dp</dimen>
+    <dimen name="btnDiasText">14sp</dimen>
 </resources>
