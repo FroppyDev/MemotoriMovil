@@ -2,6 +2,7 @@ package com.fic.memotoriweb.ui.categoryScreen
 
 import android.app.Dialog
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -27,6 +28,7 @@ import com.fic.memotoriweb.data.db.Horarios
 import com.fic.memotoriweb.data.db.HorariosDao
 import com.fic.memotoriweb.data.imageControl.ImageManager
 import com.fic.memotoriweb.databinding.ActivityCategoryBinding
+import com.fic.memotoriweb.ui.CameraActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,6 +73,11 @@ class CategoryActivity : AppCompatActivity() {
     private fun initComponents(categoriaDao: CategoryDao) {
         binding.fabCrear.setOnClickListener {
             DialogType(categoriaDao, horariosDao, this)
+        }
+
+        binding.fabCamara.setOnClickListener {
+            val intent = Intent(this, CameraActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -154,12 +161,34 @@ class CategoryActivity : AppCompatActivity() {
         var horaFin = "00"
 
 
-
         btnHorarios.setOnClickListener {
                 var timePickerFin = TimePickerFragment({
                     //onTimeSelected(it)
                     tvHoraFin.text = "Hora de fin: $it"
-                    horaFin = it
+
+                    if (horaInicio.isNotEmpty()) {
+                        val partesInicio = horaInicio.split(":")
+                        val partesFin = it.split(":")
+                        val inicioEnMin = partesInicio[0].toInt() * 60 + partesInicio[1].toInt()
+                        val finEnMin = partesFin[0].toInt() * 60 + partesFin[1].toInt()
+
+                        if (finEnMin >= inicioEnMin) {
+                            horaFin = it
+                            btnMake.isEnabled = true
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "La hora de fin no puede ser menor que la hora de inicio",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            horaInicio = "00:00"
+                            horaFin = "00:00"
+                            tvHoraInicio.text = "Hora de inicio: 00:00"
+                            tvHoraFin.text = "Hora de fin: 00:00"
+                            btnMake.isEnabled = false
+                        }
+                    }
+
                 }, "Hora de fin")
                 timePickerFin.show(supportFragmentManager, "horaFin").let {
                     var timePickerInicio = TimePickerFragment({
@@ -235,22 +264,24 @@ class CategoryActivity : AppCompatActivity() {
         }
 
         btnMake.setOnClickListener {
-            CrearCategoriaSmart(this, Categoria(
-                nombre = tilConcepto.text.toString(),
-                descripcion = tilDescripcion.text.toString(),
-                imagen = null,
-                color = CategoriaColor.SECUNDARIO,
-                smart = true,
-                latitud = null,
-                longitud = null,
-                radioMetros = null
-            ), Horarios(
-                idCategoria = 0,
-                horaInicio = horaInicio,
-                horaFin = horaFin
-            ), categoriaDao, horariosDao).let {
-                updateListCategory()
-                dialog.dismiss()
+            if (horaInicio != "00" && horaFin != "00"){
+                CrearCategoriaSmart(this, Categoria(
+                    nombre = tilConcepto.text.toString(),
+                    descripcion = tilDescripcion.text.toString(),
+                    imagen = null,
+                    color = CategoriaColor.SECUNDARIO,
+                    smart = true,
+                    latitud = null,
+                    longitud = null,
+                    radioMetros = null
+                ), Horarios(
+                    idCategoria = 0,
+                    horaInicio = horaInicio,
+                    horaFin = horaFin
+                ), categoriaDao, horariosDao).let {
+                    updateListCategory()
+                    dialog.dismiss()
+                }
             }
         }
 
