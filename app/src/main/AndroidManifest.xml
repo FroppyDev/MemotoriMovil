@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature android:name="android.hardware.camera.any" />
+
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -15,6 +16,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MemotoriWeb">
+        <activity
+            android:name=".ui.smartScreen.SmartActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.flashcardsScreen.FlashcardsActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.CameraActivity"
             android:exported="false" />

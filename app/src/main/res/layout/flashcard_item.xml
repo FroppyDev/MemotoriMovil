@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="10dp"
+    android:layout_margin="14dp"
+    android:elevation="18dp"
+    android:id="@+id/cvPadre"
+    app:cardBackgroundColor="@color/primary">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clNormal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/tvConcepto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Concepto"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:padding="10dp"/>
+
+        <View
+            android:id="@+id/vLine"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginVertical="5dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvConcepto"
+            android:layout_marginHorizontal="10dp"
+            android:background="@color/gray"/>
+
+        <TextView
+            android:id="@+id/tvDefinicion"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Definicion"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/vLine"
+
+            android:textAlignment="center"
+            android:gravity="center"
+            android:padding="10dp"/>
+
+        <LinearLayout
+            android:id="@+id/llAuxiliares"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tvDefinicion"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:background="#2BA2A9"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cvImage"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                app:cardCornerRadius="10dp"
+                android:layout_margin="10dp"
+                app:cardUseCompatPadding="false"
+                app:cardPreventCornerOverlap="false">
+
+                <ImageView
+                    android:id="@+id/ivFlashCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"/>
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:id="@+id/tvAuxiliar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Definicion extra"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:textSize="18sp"
+                android:padding="10dp"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>

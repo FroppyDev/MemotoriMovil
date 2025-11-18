@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -29,6 +30,7 @@ import com.fic.memotoriweb.data.db.HorariosDao
 import com.fic.memotoriweb.data.imageControl.ImageManager
 import com.fic.memotoriweb.databinding.ActivityCategoryBinding
 import com.fic.memotoriweb.ui.CameraActivity
+import com.fic.memotoriweb.ui.flashcardsScreen.FlashcardsActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -102,8 +104,17 @@ class CategoryActivity : AppCompatActivity() {
                 Log.i("horarios", listaCategorias.toString())
             }
 
+            if (listaCategorias.isNotEmpty()){
+                binding.tvTextoInicial.visibility = View.GONE
+            }
+
             adapter = CategoryAdapter(listaCategorias, onItemSelected = { categoria ->
-                Toast.makeText(this@CategoryActivity, categoria.nombre, Toast.LENGTH_SHORT).show()
+
+                val intent = Intent(this@CategoryActivity, FlashcardsActivity::class.java)
+                startActivity(intent).let {
+                    Globales.currentCategoria = categoria
+                }
+
             }, onDataChanged = {
                 updateListCategory()
             }, onImageChange = {
@@ -337,7 +348,7 @@ class CategoryActivity : AppCompatActivity() {
             ivImageCategory.setImageDrawable(null)
             currentImageView = null
             currentColor = CategoriaColor.MORADO
-            ivImageCategory.setBackgroundResource(R.color.bg5)
+            ivImageCategory.setBackgroundResource(R.color.bg2)
         }
 
         btnM2.setOnClickListener {

@@ -46,10 +46,6 @@ class CategoryViewHolder(view: View):RecyclerView.ViewHolder(view) {
             Log.i("errorCategoryViewHolder", e.toString())
         }
 
-        binding.clDescripcion.visibility = GONE
-        binding.vLine.visibility = GONE
-
-        binding.cvParent.setBackgroundResource(R.color.primary)
         binding.tvCategory.text = item.nombre
         binding.tvDescription.text = item.descripcion
 

@@ -98,7 +98,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:background="@color/bg5"/>
+                android:background="@color/secundary"/>
 
         </androidx.cardview.widget.CardView>
 

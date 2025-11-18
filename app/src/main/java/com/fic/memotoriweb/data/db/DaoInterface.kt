@@ -29,7 +29,7 @@ interface CategoryDao{
 @Dao
 interface TarjetasDao{
     @Query("SELECT * FROM Tarjeta WHERE idCategoria = :idCategoria")
-    fun getAllTarjetas(idCategoria: Long): Flow<List<Tarjeta>>
+    fun getAllTarjetas(idCategoria: Long): List<Tarjeta>
 
     @Insert
     fun insertTarjeta(tarjeta: Tarjeta)

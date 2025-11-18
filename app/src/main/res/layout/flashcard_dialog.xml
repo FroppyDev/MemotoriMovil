@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content">
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="300dp"
+        android:layout_height="match_parent"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:background="@color/primary"
+        android:padding="5dp">
+
+        <TextView
+            android:id="@+id/tvConcepto"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:text="Concepto"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:padding="10dp"/>
+
+        <EditText
+            android:id="@+id/etConcepto"
+            android:layout_width="0dp"
+            android:maxLength="500"
+            android:backgroundTint="@color/white"
+            android:textColor="@color/white"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tvConcepto"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginHorizontal="5dp"/>
+
+        <TextView
+            android:id="@+id/tvDefinicion"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etConcepto"
+            android:text="Definicion"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:padding="10dp"/>
+
+        <EditText
+            android:id="@+id/etDefinicion"
+            android:layout_width="0dp"
+            android:maxLength="800"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/white"
+            android:textColor="@color/white"
+            app:layout_constraintTop_toBottomOf="@+id/tvDefinicion"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginHorizontal="5dp"/>
+
+        <TextView
+            android:id="@+id/tvDefinicionExtra"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etDefinicion"
+            android:text="Definicion Extra (opcional)"
+            android:textStyle="bold"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:gravity="center"
+            android:padding="10dp"/>
+
+        <EditText
+            android:id="@+id/etDefinicionExtra"
+            android:layout_width="0dp"
+            android:maxLength="800"
+            android:backgroundTint="@color/white"
+            android:textColor="@color/white"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@+id/tvDefinicionExtra"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginHorizontal="5dp"/>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvImage"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            app:layout_constraintTop_toBottomOf="@id/etDefinicionExtra"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginVertical="5dp"
+            app:cardCornerRadius="18dp">
+
+            <ImageView
+                android:id="@+id/ivImageFlashCard"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"/>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cvButton"
+            android:layout_width="50dp"
+            android:layout_marginVertical="10dp"
+            android:layout_height="49dp"
+            app:layout_constraintEnd_toStartOf="@+id/btnCrear"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cvImage"
+            app:cardCornerRadius="5dp"
+            android:elevation="18dp"
+            android:layout_marginStart="10dp">
+
+            <ImageButton
+                android:id="@+id/ibImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/bg7"
+                android:src="@drawable/camera_ic"
+                app:tint="@color/white"/>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCrear"
+            android:layout_width="0dp"
+            android:layout_height="61dp"
+            android:text="Crear"
+            android:textColor="@color/white"
+            app:layout_constraintTop_toBottomOf="@+id/cvImage"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/cvButton"
+            android:backgroundTint="@color/bg7"
+            android:layout_marginEnd="5dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

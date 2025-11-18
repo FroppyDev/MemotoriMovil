@@ -7,7 +7,9 @@
     android:layout_margin="14dp"
     android:id="@+id/cvParent"
     app:cardCornerRadius="10dp"
-    app:cardBackgroundColor="@color/primary">
+    android:elevation="18dp"
+    app:cardBackgroundColor="@color/primary"
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
