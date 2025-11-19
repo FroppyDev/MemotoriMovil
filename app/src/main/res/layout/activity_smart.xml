@@ -30,7 +30,7 @@
                 android:padding="15dp"
                 android:fontFamily="@font/eras"
                 android:textStyle="bold"
-                android:text="Fotos"
+                android:text="@string/fotos_tituilo"
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="24sp"/>

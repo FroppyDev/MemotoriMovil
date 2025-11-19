@@ -106,6 +106,7 @@ class TestActivity : AppCompatActivity() {
             SiguienteTarjeta()
         }
     }
+
 }
 
 object RotationYFlipAnimator {

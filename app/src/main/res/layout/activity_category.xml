@@ -45,7 +45,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textStyle="bold"
-        android:text="Aun no se ha creado ninguna categoria"
+        android:text="@string/texto_inicial"
         app:layout_constraintTop_toBottomOf="@+id/cvTopBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
