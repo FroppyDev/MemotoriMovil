@@ -24,12 +24,13 @@ import com.fic.memotoriweb.data.db.Tarjeta
 import com.fic.memotoriweb.data.db.TarjetasDao
 import com.fic.memotoriweb.data.imageControl.ImageManager
 import com.fic.memotoriweb.databinding.ActivityFlashcardsBinding
+import com.fic.memotoriweb.ui.modosDeJuego.GameManager
+import com.fic.memotoriweb.ui.modosDeJuego.TestActivity
 import com.fic.memotoriweb.ui.smartScreen.SmartActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.log
 
 class FlashcardsActivity : AppCompatActivity() {
 
@@ -80,7 +81,7 @@ class FlashcardsActivity : AppCompatActivity() {
             })
 
             if (listaTarjetas.isNotEmpty()){
-                binding.tvTextoInicial.visibility = View.GONE
+                binding.tvTextoInicial.visibility = GONE
             } else {
                 binding.tvTextoInicial.visibility = View.VISIBLE
             }
@@ -183,18 +184,22 @@ class FlashcardsActivity : AppCompatActivity() {
 
         btnRepaso.setOnClickListener {
             //AQUI VA EL CODIGO PARA INICIAR EL TIPO DE JUEGO
+            IniciarJuego(GameManager.NORMAL)
         }
 
         btnTestAbierto.setOnClickListener {
             //AQUI VA EL CODIGO PARA INICIAR EL TIPO DE JUEGO
+            IniciarJuego(GameManager.QUIZZ_ABIERTO)
         }
 
         btnTestOM.setOnClickListener {
             //AQUI VA EL CODIGO PARA INICIAR EL TIPO DE JUEGO
+            IniciarJuego(GameManager.QUIZZ_OPCION)
         }
 
         btnVF.setOnClickListener {
             //AQUI VA EL CODIGO PARA INICIAR EL TIPO DE JUEGO
+            IniciarJuego(GameManager.TRUE_OR_FALSE)
         }
 
 
@@ -217,4 +222,10 @@ class FlashcardsActivity : AppCompatActivity() {
         }
     }
 
+    private fun IniciarJuego(mode: GameManager) {
+        intent = Intent(this, TestActivity::class.java)
+        startActivity(intent).let {
+            Globales.mode = mode
+        }
+    }
 }
