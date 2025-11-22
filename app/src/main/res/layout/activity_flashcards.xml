@@ -78,7 +78,7 @@
                 android:layout_height="0dp"
                 android:gravity="fill"
                 android:textStyle="bold"
-                android:text="Administracion de proyectos"
+                android:text="@string/texto_prueba"
                 android:textSize="22sp"
                 android:textColor="@color/black"
                 app:layout_constraintEnd_toStartOf="@+id/ibCarpeta"
