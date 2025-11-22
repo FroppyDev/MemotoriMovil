@@ -102,7 +102,7 @@
             android:layout_height="wrap_content"
             android:text="@string/texto_largo"
             android:textColor="@color/black"
-            android:layout_marginBottom="10dp"/>
+            android:layout_marginBottom="9dp"/>
 
 
     </LinearLayout>
