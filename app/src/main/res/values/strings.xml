@@ -56,4 +56,7 @@
     <string name="fotos_tituilo">Fotos</string>
     <string name="texto_prueba">Administracion de proyectos</string>
     <string name="texto_largo">sdnfkjsdfkjsdfnaskjdfnkasnfkjasndfjsfnkjsaamaslkfdmlkasdfkmlasmdfdsakmfsdaklfdsmaklfkmlsdfmasldkfmlaskdfmklasdmflkasdmflaskdmflkasdmfklasmfklmaslfmaskldfmklasdfmklasmdfklasmdfklasmdflasmldfkas</string>
+    <string name="cd_tittle">Titulo</string>
+    <string name="cd_descripcion">Descripcion (opcional)</string>
+    <string name="cd_btn_crear">Crear</string>
 </resources>
