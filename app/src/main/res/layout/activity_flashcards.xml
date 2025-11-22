@@ -100,7 +100,7 @@
             android:id="@+id/tvDescripcionCategoria"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="sdnfkjsdfkjsdfnaskjdfnkasnfkjasndfjsfnkjsaamaslkfdmlkasdfkmlasmdfdsakmfsdaklfdsmaklfkmlsdfmasldkfmlaskdfmklasdmflkasdmflaskdmflkasdmfklasmfklmaslfmaskldfmklasdfmklasmdfklasmdfklasmdflasmldfkas"
+            android:text="@string/texto_largo"
             android:textColor="@color/black"
             android:layout_marginBottom="10dp"/>
 
