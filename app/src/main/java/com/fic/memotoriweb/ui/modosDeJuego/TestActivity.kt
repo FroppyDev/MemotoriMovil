@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
 
 class TestActivity : AppCompatActivity() {
 
@@ -52,7 +53,7 @@ class TestActivity : AppCompatActivity() {
             when(mode) {
                 GameManager.NORMAL -> NormalMode(tarjetasList[index])
                 GameManager.QUIZZ_OPCION -> Quizz_Opcion(tarjetasList[index], tarjetasList)
-                GameManager.TRUE_OR_FALSE -> TODO()
+                GameManager.TRUE_OR_FALSE -> True_Or_False(tarjetasList[index], tarjetasList)
                 GameManager.QUIZZ_ABIERTO -> TODO()
                 GameManager.MIXED -> TODO()
             }
@@ -78,6 +79,37 @@ class TestActivity : AppCompatActivity() {
         }
     }
 
+    private fun True_Or_False(tarjetaActual: Tarjeta, listaTarjetas: List<Tarjeta>){
+
+        val vista = layoutInflater.inflate(R.layout.layout_tof, binding.contenedorModos, false)
+        binding.contenedorModos.removeAllViews()
+        binding.contenedorModos.addView(vista)
+
+        var btnVerdadero = vista.findViewById<AppCompatButton>(R.id.btnVerdadero)
+        var btnFalso = vista.findViewById<AppCompatButton>(R.id.btnFalso)
+        var tvRespuesta = vista.findViewById<TextView>(R.id.tvRespuesta)
+        var tvPregunta = vista.findViewById<TextView>(R.id.tvPregunta)
+
+        var respuesta:String?
+        var opcion = Random.nextInt(1, 3)
+        if (opcion == 1){
+            respuesta = tarjetaActual.concepto
+        } else {
+            respuesta = listaTarjetas.get(Random.nextInt(0, listaTarjetas.size - 1)).concepto
+        }
+
+        tvPregunta.text = tarjetaActual.definicion
+        tvRespuesta.text = respuesta
+
+        btnVerdadero.setOnClickListener {
+            SiguienteTarjeta()
+        }
+
+        btnFalso.setOnClickListener {
+            SiguienteTarjeta()
+        }
+
+    }
 
     private fun Quizz_Opcion(tarjetaActual: Tarjeta, listaTarjetas: List<Tarjeta>){
 
