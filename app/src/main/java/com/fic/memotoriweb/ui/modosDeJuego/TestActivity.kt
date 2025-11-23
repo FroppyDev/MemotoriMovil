@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -54,7 +56,7 @@ class TestActivity : AppCompatActivity() {
                 GameManager.NORMAL -> NormalMode(tarjetasList[index])
                 GameManager.QUIZZ_OPCION -> Quizz_Opcion(tarjetasList[index], tarjetasList)
                 GameManager.TRUE_OR_FALSE -> True_Or_False(tarjetasList[index], tarjetasList)
-                GameManager.QUIZZ_ABIERTO -> TODO()
+                GameManager.QUIZZ_ABIERTO -> Quizz_Abierto(tarjetasList[index])
                 GameManager.MIXED -> TODO()
             }
         }
@@ -77,6 +79,31 @@ class TestActivity : AppCompatActivity() {
         } else {
 
         }
+    }
+
+    private fun Quizz_Abierto(tarjetaActual: Tarjeta){
+        val vista = layoutInflater.inflate(R.layout.layout_abierto, binding.contenedorModos, false)
+        binding.contenedorModos.removeAllViews()
+        binding.contenedorModos.addView(vista)
+
+        var btnAceptar = vista.findViewById<AppCompatButton>(R.id.btnAceptar)
+        var btnDesconocido = vista.findViewById<AppCompatButton>(R.id.btnDesconocida)
+        var etRespuesta = vista.findViewById<EditText>(R.id.etRespuesta)
+        var btnAuxiliar = vista.findViewById<ImageButton>(R.id.btnAuxiliar)
+        var btnImagen = vista.findViewById<ImageButton>(R.id.btnImagen)
+        var tvPregunta = vista.findViewById<TextView>(R.id.tvPregunta)
+
+        tvPregunta.text = tarjetaActual.definicion
+
+        btnAceptar.setOnClickListener {
+            //etRespuesta.text.toString()
+            SiguienteTarjeta()
+        }
+
+        btnDesconocido.setOnClickListener {
+            SiguienteTarjeta()
+        }
+
     }
 
     private fun True_Or_False(tarjetaActual: Tarjeta, listaTarjetas: List<Tarjeta>){

@@ -59,4 +59,5 @@
     <string name="cd_tittle">Titulo</string>
     <string name="cd_descripcion">Descripcion (opcional)</string>
     <string name="cd_btn_crear">Crear</string>
+    <string name="la_respuesta">Respuesta</string>
 </resources>
