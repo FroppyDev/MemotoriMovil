@@ -2,6 +2,7 @@ package com.fic.memotoriweb.ui.modosDeJuego
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
+import android.app.Dialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -9,12 +10,14 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.cardview.widget.CardView
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.fic.memotoriweb.Globales
@@ -94,6 +97,14 @@ class TestActivity : AppCompatActivity() {
         var tvPregunta = vista.findViewById<TextView>(R.id.tvPregunta)
 
         tvPregunta.text = tarjetaActual.definicion
+
+        btnImagen.setOnClickListener{
+            imageDialog(tarjetaActual)
+        }
+
+        btnAuxiliar.setOnClickListener {
+            textDialog(tarjetaActual)
+        }
 
         btnAceptar.setOnClickListener {
             //etRespuesta.text.toString()
@@ -236,6 +247,45 @@ class TestActivity : AppCompatActivity() {
         btnD.setOnClickListener {
             SiguienteTarjeta()
         }
+    }
+
+    private fun imageDialog(tarjeta: Tarjeta){
+
+        var dialog = Dialog(this)
+        val vista = R.layout.image_dialog
+        dialog.setContentView(vista)
+
+        var img = dialog.findViewById<ImageView>(R.id.ivImagenTarjeta)
+
+        if(tarjeta.imagen != null){
+            img.setImageURI(tarjeta.imagen!!.toUri())
+
+            dialog.show()
+        } else {
+            Toast.makeText(this, "No hay imagen", Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private fun textDialog(tarjeta: Tarjeta){
+
+        var dialog = Dialog(this)
+        val vista = R.layout.text_dialog
+        dialog.setContentView(vista)
+
+        var text = dialog.findViewById<TextView>(R.id.tvAuxiliar)
+
+        if(tarjeta.definicionExtra != null){
+
+            text.text = tarjeta.definicionExtra
+
+            dialog.show()
+        } else {
+
+            Toast.makeText(this, "No hay imagen", Toast.LENGTH_SHORT).show()
+
+        }
+
     }
 
 }
