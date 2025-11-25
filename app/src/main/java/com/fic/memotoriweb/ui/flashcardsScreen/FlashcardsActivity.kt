@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fic.memotoriweb.Globales
 import com.fic.memotoriweb.R
@@ -70,17 +71,19 @@ class FlashcardsActivity : AppCompatActivity() {
 
     private fun initRV(categoria: Categoria, tarjetasDao: TarjetasDao) {
 
-        CoroutineScope(Dispatchers.IO).launch{
-            var listaTarjetas = withContext(Dispatchers.IO){
+        CoroutineScope(Dispatchers.IO).launch {
+            var listaTarjetas = withContext(Dispatchers.IO) {
                 tarjetasDao.getAllTarjetas(categoria.id)
             }
 
             Log.i("Tarjetas", listaTarjetas.toString())
-            adapter = FlashCardsAdapter( listaTarjetas, onItemSelected = { tarjeta ->
-
+            adapter = FlashCardsAdapter(listaTarjetas, onItemSelected = { tarjeta, position ->
+                ModificarDialog(tarjeta, listaTarjetas, position)
+            }, onDataChanged = {
+                updateListFlashCards()
             })
 
-            if (listaTarjetas.isNotEmpty()){
+            if (listaTarjetas.isNotEmpty()) {
                 binding.tvTextoInicial.visibility = GONE
             } else {
                 binding.tvTextoInicial.visibility = View.VISIBLE
@@ -95,7 +98,7 @@ class FlashcardsActivity : AppCompatActivity() {
         binding.tvTituloCategoria.text = categoria.nombre
         binding.tvDescripcionCategoria.text = categoria.descripcion
 
-        if (!categoria.smart){
+        if (!categoria.smart) {
 
             binding.ibCarpeta.visibility = GONE
             val params = binding.tvTituloCategoria.layoutParams as ConstraintLayout.LayoutParams
@@ -117,6 +120,68 @@ class FlashcardsActivity : AppCompatActivity() {
         binding.fabCrear.setOnClickListener {
             CrearTarjetaDialog(tarjetasDao)
         }
+    }
+
+    private fun ModificarDialog(tarjeta: Tarjeta, listaTarjeta: List<Tarjeta>, position: Int) {
+        val dialog = Dialog(this)
+        val vista = R.layout.flashcard_dialog
+        dialog.setContentView(vista)
+
+        var etConcepto = dialog.findViewById<EditText>(R.id.etConcepto)
+        var etDefinicion = dialog.findViewById<EditText>(R.id.etDefinicion)
+        var etDefinicionExtra = dialog.findViewById<EditText>(R.id.etDefinicionExtra)
+        var ibImage = dialog.findViewById<ImageButton>(R.id.ibImage)
+        var btnCrear = dialog.findViewById<AppCompatButton>(R.id.btnCrear)
+        var ivImageFlashCard = dialog.findViewById<ImageView>(R.id.ivImageFlashCard)
+
+        btnCrear.text = "Modificar"
+
+        etConcepto.setText(tarjeta.concepto)
+        etDefinicion.setText(tarjeta.definicion)
+        etDefinicionExtra.setText(tarjeta.definicionExtra)
+
+        if (tarjeta.imagen != null) {
+            currentUri = tarjeta.imagen!!.toUri()
+            ivImageFlashCard.setImageURI(tarjeta.imagen!!.toUri())
+        } else {
+            ivImageFlashCard.setImageURI(null)
+            currentUri = null
+        }
+
+        ibImage.setOnClickListener {
+            currentImageView = ivImageFlashCard
+            mediaPicker.launch("image/*")
+        }
+
+        btnCrear.setOnClickListener {
+
+            var img: String? = null
+            if (currentUri != null) {
+                if (currentUri.toString() != tarjeta.imagen.toString()){
+                    img = ImageManager().imageToInternalStorage(this, currentUri!!)
+                } else img = tarjeta.imagen
+                currentUri = null
+            } else img = null
+
+            ModificarTarjeta(
+                tarjeta.copy(
+                    concepto = etConcepto.text.toString(),
+                    definicion = etDefinicion.text.toString(),
+                    definicionExtra = etDefinicionExtra.text.toString(),
+                    imagen = img
+                ), tarjetasDao
+            ).let {
+                updateListFlashCards()
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
+
+    }
+
+    private fun updateFlashCardView(tarjeta: Tarjeta, listaTarjetas: List<Tarjeta>) {
+        adapter.actualizarItem(listaTarjetas.indexOf(tarjeta))
     }
 
     private fun CrearTarjetaDialog(tarjetasDao: TarjetasDao) {
@@ -145,13 +210,15 @@ class FlashcardsActivity : AppCompatActivity() {
                 currentUri = null
             } else img = null
 
-            CrearTarjeta(Tarjeta(
-                idCategoria = Globales.currentCategoria!!.id,
-                concepto = etConcepto.text.toString(),
-                definicion = etDefinicion.text.toString(),
-                definicionExtra = etDefinicionExtra.text.toString(),
-                imagen = img
-            ), tarjetasDao).let {
+            CrearTarjeta(
+                Tarjeta(
+                    idCategoria = Globales.currentCategoria!!.id,
+                    concepto = etConcepto.text.toString(),
+                    definicion = etDefinicion.text.toString(),
+                    definicionExtra = etDefinicionExtra.text.toString(),
+                    imagen = img
+                ), tarjetasDao
+            ).let {
                 updateListFlashCards()
                 dialog.dismiss()
             }
@@ -165,13 +232,25 @@ class FlashcardsActivity : AppCompatActivity() {
             try {
                 tarjetasDao.insertTarjeta(tarjeta)
                 Log.i("Tarjetas", "Tarjeta creada")
-            } catch (e: Exception){
-                Log.i("Tarjetas",e.toString())
+            } catch (e: Exception) {
+                Log.i("Tarjetas", e.toString())
             }
         }
     }
 
-    private fun OpcionesDialog(){
+    private fun ModificarTarjeta(tarjeta: Tarjeta, tarjetasDao: TarjetasDao) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                tarjetasDao.updateFlashcard(tarjeta)
+                Log.i("Tarjetas", "Tarjeta modificada")
+            } catch (e: Exception) {
+                Log.i("Tarjetas", e.toString())
+            }
+        }
+    }
+
+
+    private fun OpcionesDialog() {
 
         var dialog = Dialog(this)
         var vista = R.layout.opciones_dialog
