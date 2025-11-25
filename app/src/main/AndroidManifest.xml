@@ -17,6 +17,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MemotoriWeb">
         <activity
+            android:name=".ui.modosDeJuego.resultados.ResultadosActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.modosDeJuego.TestActivity"
             android:exported="false" />
         <activity

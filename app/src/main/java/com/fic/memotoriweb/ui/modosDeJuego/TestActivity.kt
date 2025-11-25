@@ -27,6 +27,7 @@ import com.fic.memotoriweb.data.db.Tarjeta
 import com.fic.memotoriweb.data.db.TarjetasDao
 import com.fic.memotoriweb.databinding.ActivityTestBinding
 import com.fic.memotoriweb.ui.login.LoginActivity
+import com.fic.memotoriweb.ui.modosDeJuego.resultados.ResultadosActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,7 +61,7 @@ class TestActivity : AppCompatActivity() {
                 GameManager.QUIZZ_OPCION -> Quizz_Opcion(tarjetasList[index], tarjetasList)
                 GameManager.TRUE_OR_FALSE -> True_Or_False(tarjetasList[index], tarjetasList)
                 GameManager.QUIZZ_ABIERTO -> Quizz_Abierto(tarjetasList[index])
-                GameManager.MIXED -> TODO()
+                GameManager.MIXED -> Mixed(tarjetasList[index], tarjetasList)
             }
         }
     }
@@ -78,8 +79,35 @@ class TestActivity : AppCompatActivity() {
     fun SiguienteTarjeta(){
         if (index < tarjetasList.lastIndex) {
             index++
+
+            binding.progressBar.progress = index * 100 / tarjetasList.size
+            binding.tvRestantes.text = "${index} / ${tarjetasList.size}"
+
             initGames(mode)
         } else {
+            var intent = Intent(this, ResultadosActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+    }
+
+    private fun Mixed(tarjetaActual: Tarjeta, listaTarjetas: List<Tarjeta>){
+        var randomMode = Random.nextInt(1, 5)
+
+        when(randomMode){
+
+            1 -> {NormalMode(tarjetaActual)}
+            2 -> {
+                if(listaTarjetas.size >= 4){
+                    Quizz_Opcion(tarjetaActual, listaTarjetas)
+                }
+            }
+            3 -> {
+                if(listaTarjetas.size >= 2){
+                    True_Or_False(tarjetaActual, listaTarjetas)
+                }
+            }
+            4 -> {Quizz_Abierto(tarjetaActual)}
 
         }
     }
@@ -275,7 +303,7 @@ class TestActivity : AppCompatActivity() {
 
         var text = dialog.findViewById<TextView>(R.id.tvAuxiliar)
 
-        if(tarjeta.definicionExtra != null){
+        if(tarjeta.definicionExtra != ""){
 
             text.text = tarjeta.definicionExtra
 

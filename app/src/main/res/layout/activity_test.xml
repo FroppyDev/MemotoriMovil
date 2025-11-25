@@ -7,10 +7,57 @@
     android:layout_height="match_parent"
     tools:context=".ui.modosDeJuego.TestActivity">
 
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cvTopBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:cardBackgroundColor="@color/primary"
+        android:elevation="20dp"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:id="@+id/flMCards"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:progress="0"
+                android:max="100"
+                android:progressTint="@color/secundary"
+                android:layout_marginStart="10dp"
+                android:layout_gravity="center"/>
+
+            <TextView
+                android:id="@+id/tvRestantes"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="1 / 20"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_gravity="end"
+                android:gravity="center"
+                android:layout_marginHorizontal="10dp"/>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
     <FrameLayout
         android:id="@+id/contenedorModos"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/cvTopBar"
+        app:layout_constraintBottom_toBottomOf="parent">
 
 
     </FrameLayout>

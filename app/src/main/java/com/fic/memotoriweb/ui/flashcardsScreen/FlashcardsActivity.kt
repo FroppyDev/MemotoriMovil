@@ -181,6 +181,7 @@ class FlashcardsActivity : AppCompatActivity() {
         var btnTestAbierto = dialog.findViewById<CardView>(R.id.btnTestAbierto)
         var btnTestOM = dialog.findViewById<CardView>(R.id.btnTestOM)
         var btnVF = dialog.findViewById<CardView>(R.id.btnVF)
+        var btnCombinado = dialog.findViewById<CardView>(R.id.btnCombinado)
 
         btnRepaso.setOnClickListener {
             //AQUI VA EL CODIGO PARA INICIAR EL TIPO DE JUEGO
@@ -202,6 +203,9 @@ class FlashcardsActivity : AppCompatActivity() {
             IniciarJuego(GameManager.TRUE_OR_FALSE)
         }
 
+        btnCombinado.setOnClickListener {
+            IniciarJuego(GameManager.MIXED)
+        }
 
 
         dialog.show()
