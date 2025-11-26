@@ -28,6 +28,9 @@ import com.fic.memotoriweb.data.db.TarjetasDao
 import com.fic.memotoriweb.databinding.ActivityTestBinding
 import com.fic.memotoriweb.ui.login.LoginActivity
 import com.fic.memotoriweb.ui.modosDeJuego.resultados.ResultadosActivity
+import com.fic.memotoriweb.ui.modosDeJuego.resultados.resultadosRV.Resultados
+import com.fic.memotoriweb.ui.modosDeJuego.resultados.resultadosRV.TOFResponse
+import com.fic.memotoriweb.ui.modosDeJuego.resultados.resultadosRV.TipoResultado
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,6 +48,8 @@ class TestActivity : AppCompatActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        Globales.resultadosList.clear()
 
         tarjetasDao = DatabaseProvider.GetDataBase(applicationContext).GetTarjetasDao()
         binding = ActivityTestBinding.inflate(layoutInflater)
@@ -136,10 +141,13 @@ class TestActivity : AppCompatActivity() {
 
         btnAceptar.setOnClickListener {
             //etRespuesta.text.toString()
+
+            Globales.resultadosList.add(Resultados(TipoResultado.TEST, tarjetaActual, test_mode_response = etRespuesta.text.toString()))
             SiguienteTarjeta()
         }
 
         btnDesconocido.setOnClickListener {
+            Globales.resultadosList.add(Resultados(TipoResultado.TEST, tarjetaActual, test_mode_response = "Sin respuesta"))
             SiguienteTarjeta()
         }
 
@@ -168,10 +176,12 @@ class TestActivity : AppCompatActivity() {
         tvRespuesta.text = respuesta
 
         btnVerdadero.setOnClickListener {
+            Globales.resultadosList.add(Resultados(TipoResultado.TRUE_OR_FALSE, tarjetaActual, true_or_false = TOFResponse(tarjetaActual.concepto, true)))
             SiguienteTarjeta()
         }
 
         btnFalso.setOnClickListener {
+            Globales.resultadosList.add(Resultados(TipoResultado.TRUE_OR_FALSE, tarjetaActual, true_or_false = TOFResponse(tarjetaActual.concepto, false)))
             SiguienteTarjeta()
         }
 
@@ -196,28 +206,30 @@ class TestActivity : AppCompatActivity() {
             when (index) {
                 0 -> {
                     // primera tarjeta -> agarra 3 por delante
-                    opciones.addAll(tarjetasList.subList(0, minOf(4, tarjetasList.size)))
+                    opciones.addAll(listaTarjetas.subList(0, minOf(4, listaTarjetas.size)))
                 }
 
-                tarjetasList.lastIndex -> {
+                listaTarjetas.lastIndex -> {
                     // última tarjeta -> agarra 3 por detrás
-                    val start = maxOf(tarjetasList.size - 4, 0)
-                    opciones.addAll(tarjetasList.subList(start, tarjetasList.size))
+                    val start = maxOf(listaTarjetas.size - 4, 0)
+                    opciones.addAll(listaTarjetas.subList(start, listaTarjetas.size))
                 }
 
                 else -> {
                     // caso normal -> intenta 1 atrás y 2 adelante
                     val start = maxOf(index - 1, 0)
-                    val end = minOf(index + 3, tarjetasList.size) // index+3 porque es exclusivo
-                    opciones.addAll(tarjetasList.subList(start, end))
+                    val end = minOf(index + 3, listaTarjetas.size) // index+3 porque es exclusivo
+                    opciones.addAll(listaTarjetas.subList(start, end))
 
                     // si no llegaste a 4 (por estar cerca de límites), completa por el otro lado
                     while (opciones.size < 4) {
-                        if (start > 0) opciones.add(0, tarjetasList[start - 1])
-                        else if (end < tarjetasList.size) opciones.add(tarjetasList[end])
+                        if (start > 0) opciones.add(0, listaTarjetas[start - 1])
+                        else if (end < listaTarjetas.size) opciones.add(listaTarjetas[end])
                     }
                 }
             }
+
+            opciones.shuffle()
 
             tvPregunta.text = tarjetaActual.definicion
             btnOpcion1.text = opciones[0].concepto
@@ -226,18 +238,22 @@ class TestActivity : AppCompatActivity() {
             btnOpcion4.text = opciones[3].concepto
 
             btnOpcion1.setOnClickListener {
+                Globales.resultadosList.add(Resultados(TipoResultado.MULTIPLE_CHOICE, tarjetaActual, multiple_choice_response = opciones[0].concepto.toString()))
                 SiguienteTarjeta()
             }
 
             btnOpcion2.setOnClickListener {
+                Globales.resultadosList.add(Resultados(TipoResultado.MULTIPLE_CHOICE, tarjetaActual, multiple_choice_response = opciones[1].concepto.toString()))
                 SiguienteTarjeta()
             }
 
             btnOpcion3.setOnClickListener {
+                Globales.resultadosList.add(Resultados(TipoResultado.MULTIPLE_CHOICE, tarjetaActual, multiple_choice_response = opciones[2].concepto.toString()))
                 SiguienteTarjeta()
             }
 
             btnOpcion4.setOnClickListener {
+                Globales.resultadosList.add(Resultados(TipoResultado.MULTIPLE_CHOICE, tarjetaActual, multiple_choice_response = opciones[3].concepto.toString()))
                 SiguienteTarjeta()
             }
 
@@ -246,6 +262,7 @@ class TestActivity : AppCompatActivity() {
         }
 
     }
+
     private fun NormalMode(card: Tarjeta) {
         val vista = layoutInflater.inflate(R.layout.layout_normal, binding.contenedorModos, false)
         binding.contenedorModos.removeAllViews()
@@ -269,10 +286,12 @@ class TestActivity : AppCompatActivity() {
         }
 
         btnC.setOnClickListener {
+            Globales.resultadosList.add(Resultados(TipoResultado.NORMAL, card, true))
             SiguienteTarjeta()
         }
 
         btnD.setOnClickListener {
+            Globales.resultadosList.add(Resultados(TipoResultado.NORMAL, card, false))
             SiguienteTarjeta()
         }
     }

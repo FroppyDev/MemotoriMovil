@@ -10,6 +10,9 @@
     <color name="secundary">#E72D72</color>
     <color name="primary">#30B7BE</color>
 
+    <color name="correct">#55D34D</color>
+    <color name="incorrect">#D34D4D</color>
+
 
     <color name="bg">#F9DED3</color>
     <color name="bg2">#91BEEF</color>
