@@ -2,6 +2,7 @@ package com.fic.memotoriweb.ui.categoryScreen
 
 import android.app.Dialog
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.view.View
 import android.view.View.GONE
@@ -12,6 +13,7 @@ import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.fic.memotoriweb.Globales
 import com.fic.memotoriweb.R
 import com.fic.memotoriweb.data.db.Categoria
@@ -23,6 +25,7 @@ import com.fic.memotoriweb.databinding.CategoryItemBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
 
 class CategoryViewHolder(view: View):RecyclerView.ViewHolder(view) {
 
@@ -38,7 +41,13 @@ class CategoryViewHolder(view: View):RecyclerView.ViewHolder(view) {
 
         try {
             if (item.imagen != null){
-                binding.ivCategoryImage.setImageURI(item.imagen!!.toUri())
+                if (item.imagen?.startsWith("http") == true) {
+                    Glide.with(binding.root.context)
+                        .load(item.imagen)
+                        .into(binding.ivCategoryImage)
+                } else {
+                    binding.ivCategoryImage.setImageURI(Uri.fromFile(File(item.imagen)))
+                }
             } else {
                 binding.ivCategoryImage.setBackgroundResource(item.color.color!!)
             }

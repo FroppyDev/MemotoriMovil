@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Memotori</string>
+    <string name="app_name">MemotoriWeb</string>
     <string name="title_activity_login">LoginActivity</string>
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password</string>
@@ -60,4 +60,8 @@
     <string name="cd_descripcion">Descripcion (opcional)</string>
     <string name="cd_btn_crear">Crear</string>
     <string name="la_respuesta">Respuesta</string>
+    <string name="et_user_name">Nombre de usuario</string>
+    <string name="etEmail">Ingresar Email</string>
+    <string name="btnResgister">Registrar</string>
+    <string name="password_not_match">Las contraseñas no coinciden</string>
 </resources>

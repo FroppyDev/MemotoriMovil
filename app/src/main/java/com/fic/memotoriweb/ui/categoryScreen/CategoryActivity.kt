@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -17,6 +19,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fic.memotoriweb.Globales
 import com.fic.memotoriweb.R
@@ -27,14 +30,23 @@ import com.fic.memotoriweb.data.db.CategoryDao
 import com.fic.memotoriweb.data.db.DatabaseProvider
 import com.fic.memotoriweb.data.db.Horarios
 import com.fic.memotoriweb.data.db.HorariosDao
+import com.fic.memotoriweb.data.db.SyncStatus
 import com.fic.memotoriweb.data.imageControl.ImageManager
+import com.fic.memotoriweb.data.network.ApiService
+import com.fic.memotoriweb.data.network.SyncPrefs
+import com.fic.memotoriweb.data.network.SyncRepository
 import com.fic.memotoriweb.databinding.ActivityCategoryBinding
 import com.fic.memotoriweb.ui.CameraActivity
 import com.fic.memotoriweb.ui.flashcardsScreen.FlashcardsActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import java.io.File
 
 class CategoryActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCategoryBinding
@@ -70,6 +82,37 @@ class CategoryActivity : AppCompatActivity() {
         setContentView(binding.root)
         initRV(categoriaDao, horariosDao)
         initComponents(categoriaDao)
+        configSwipe()
+        SyncRepository(applicationContext).enqueueSync()
+        lifecycleScope.launch {
+            visualSwipe(true, false)
+            delay(1500) // espera a que el sync termine
+            visualSwipe(false, true)
+            updateListCategory()
+        }
+        //initWebData()
+    }
+
+    private fun initWebData() {
+        val listaCategorias = lifecycleScope.launch {
+            val response = ApiService().getCategories(1)
+            Log.i("kevin", response.body().toString())
+            if (response.isSuccessful){
+                adapter = CategoryAdapter(response.body(), onItemSelected = { categoria ->
+                    val intent = Intent(this@CategoryActivity, FlashcardsActivity::class.java)
+                    startActivity(intent).let {
+                        Globales.currentCategoria = categoria
+                    }
+                }, onDataChanged = {
+                    updateListCategory()
+                }, onImageChange = {
+                    mediaPicker.launch("image/*")
+                })
+
+                binding.rvCategory.layoutManager = LinearLayoutManager(this@CategoryActivity)
+                binding.rvCategory.adapter = adapter
+            }
+        }
     }
 
     private fun initComponents(categoriaDao: CategoryDao) {
@@ -81,20 +124,24 @@ class CategoryActivity : AppCompatActivity() {
             val intent = Intent(this, CameraActivity::class.java)
             startActivity(intent)
         }
+
+
     }
 
     private fun initRV(categoriaDao: CategoryDao, horarioDao: HorariosDao) {
 
+        //cambiar user id place holder
         val listaPrueba = listOf<Categoria>(
             Categoria(
-                0, "kevin", "kevin", null,
-                CategoriaColor.MORADO, false, null, null, null
+                0, "kevin", SyncPrefs(this).getUserId(),null, "kevin", null,
+                CategoriaColor.MORADO, false, null, null, null, syncStatus = SyncStatus.PENDING_CREATE
             )
         )
 
         CoroutineScope(Dispatchers.Main).launch {
+
             val listaCategorias = withContext(Dispatchers.IO) {
-                categoriaDao.getAllCategorys()
+                categoriaDao.getAllCategorys(SyncPrefs(applicationContext).getUserId())
             }
 
             val listaHorarios = withContext(Dispatchers.IO){
@@ -278,17 +325,21 @@ class CategoryActivity : AppCompatActivity() {
             if (horaInicio != "00" && horaFin != "00"){
                 CrearCategoriaSmart(this, Categoria(
                     nombre = tilConcepto.text.toString(),
+                    userId = SyncPrefs(this).getUserId(), //cambiar id a futuro
                     descripcion = tilDescripcion.text.toString(),
                     imagen = null,
                     color = CategoriaColor.SECUNDARIO,
                     smart = true,
                     latitud = null,
                     longitud = null,
-                    radioMetros = null
+                    radioMetros = null,
+                    syncStatus = SyncStatus.PENDING_CREATE
                 ), Horarios(
                     idCategoria = 0,
+                    userId = SyncPrefs(this).getUserId(), //cambiar id a futuro
                     horaInicio = horaInicio,
-                    horaFin = horaFin
+                    horaFin = horaFin,
+                    syncStatus = SyncStatus.PENDING_CREATE
                 ), categoriaDao, horariosDao).let {
                     updateListCategory()
                     dialog.dismiss()
@@ -389,19 +440,23 @@ class CategoryActivity : AppCompatActivity() {
                 currentUri = null
             } else img = null
 
+
             makeCategory(
                 Categoria(
                     nombre = tilConcepto.text.toString(),
+                    userId = SyncPrefs(this).getUserId(), //cambiar id a futuro
                     descripcion = tilDescripcion.text.toString(),
                     imagen = img,
                     color = currentColor,
                     smart = false,
                     latitud = null,
                     longitud = null,
-                    radioMetros = null
+                    radioMetros = null,
+                    syncStatus = SyncStatus.PENDING_CREATE
                 ),
                 categoriaDao
             ).let {
+                SyncRepository(applicationContext).enqueueSync()
                 updateListCategory()
                 dialog.dismiss()
             }
@@ -424,6 +479,31 @@ class CategoryActivity : AppCompatActivity() {
 
         }
 
+        /*lifecycleScope.launch {
+
+            val response = ApiService().createCategory(1, categoria)
+            Log.i("kevin", response.body().toString())
+            if (response.isSuccessful) {
+                updateDataWeb()
+            }
+        }*/
+
+    }
+
+    private fun updateDataWeb() {
+
+        lifecycleScope.launch {
+
+            val response = ApiService().getCategories(SyncPrefs(applicationContext).getUserId())
+            if (response.isSuccessful){
+                if (response != null){
+                    response.body()?.let { adapter.actualizarLista(it) }
+                }
+            }
+
+        }
+
+
     }
 
     private fun updateListCategory() {
@@ -432,11 +512,29 @@ class CategoryActivity : AppCompatActivity() {
 
         CoroutineScope(Dispatchers.Main).launch {
             listaCategorias = withContext(Dispatchers.IO) {
-                categoriaDao.getAllCategorys()
+                categoriaDao.getAllCategorys(SyncPrefs(applicationContext).getUserId())
             }
 
             adapter.actualizarLista(listaCategorias)
 
+        }
+    }
+
+    private fun visualSwipe(isRefreshing: Boolean, isSwipeEnabled: Boolean){
+
+        binding.srCategories.isEnabled = isSwipeEnabled
+        binding.srCategories.isRefreshing = isRefreshing
+
+    }
+
+    private fun configSwipe() {
+
+        binding.srCategories.setOnRefreshListener {
+            SyncRepository(applicationContext).enqueueSync()
+            updateListCategory()
+            Handler(Looper.getMainLooper()).postDelayed({
+                binding.srCategories.isRefreshing = false
+            }, 2000)
         }
     }
 }

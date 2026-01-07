@@ -16,14 +16,18 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.net.toUri
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.fic.memotoriweb.Globales
 import com.fic.memotoriweb.R
 import com.fic.memotoriweb.data.db.Categoria
 import com.fic.memotoriweb.data.db.DatabaseProvider
+import com.fic.memotoriweb.data.db.SyncStatus
 import com.fic.memotoriweb.data.db.Tarjeta
 import com.fic.memotoriweb.data.db.TarjetasDao
 import com.fic.memotoriweb.data.imageControl.ImageManager
+import com.fic.memotoriweb.data.network.ApiService
+import com.fic.memotoriweb.data.network.SyncRepository
 import com.fic.memotoriweb.databinding.ActivityFlashcardsBinding
 import com.fic.memotoriweb.ui.modosDeJuego.GameManager
 import com.fic.memotoriweb.ui.modosDeJuego.TestActivity
@@ -67,6 +71,28 @@ class FlashcardsActivity : AppCompatActivity() {
         setContentView(binding.root)
         initRV(Globales.currentCategoria!!, tarjetasDao)
         initComponents(Globales.currentCategoria!!, tarjetasDao)
+        //initWebData(Globales.currentCategoria!!)
+    }
+
+    private fun initWebData(categoria: Categoria) {
+
+        binding.tvTituloCategoria.text = categoria.nombre
+        binding.tvDescripcionCategoria.text = categoria.descripcion
+
+        val listaTarjetas = lifecycleScope.launch {
+            val response = ApiService().getTarjetasByUser(Globales.currentCategoria!!.id.toInt(), 1)
+            Log.i("kevin", response.body().toString())
+            if (response.isSuccessful){
+                adapter = FlashCardsAdapter(response.body(), onItemSelected = { tarjeta, position ->
+                    ModificarDialog(tarjeta, response.body()!!, position)
+                }, onDataChanged = {
+                    updateListFlashCards()
+                })
+
+                binding.rvFlashCards.layoutManager = LinearLayoutManager(this@FlashcardsActivity)
+                binding.rvFlashCards.adapter = adapter
+            }
+        }
     }
 
     private fun initRV(categoria: Categoria, tarjetasDao: TarjetasDao) {
@@ -114,6 +140,7 @@ class FlashcardsActivity : AppCompatActivity() {
 
         binding.ibCarpeta.setOnClickListener {
             var intent = Intent(this, SmartActivity::class.java)
+            intent.putExtra("CAT_ID", categoria.id)
             startActivity(intent)
         }
 
@@ -213,12 +240,15 @@ class FlashcardsActivity : AppCompatActivity() {
             CrearTarjeta(
                 Tarjeta(
                     idCategoria = Globales.currentCategoria!!.id,
+                    userId = 1, //cambiar id a futuro
                     concepto = etConcepto.text.toString(),
                     definicion = etDefinicion.text.toString(),
                     definicionExtra = etDefinicionExtra.text.toString(),
-                    imagen = img
+                    imagen = img,
+                    syncStatus = SyncStatus.PENDING_CREATE
                 ), tarjetasDao
             ).let {
+                SyncRepository(applicationContext).enqueueSync()
                 updateListFlashCards()
                 dialog.dismiss()
             }
@@ -228,6 +258,14 @@ class FlashcardsActivity : AppCompatActivity() {
     }
 
     private fun CrearTarjeta(tarjeta: Tarjeta, tarjetasDao: TarjetasDao) {
+
+        /*lifecycleScope.launch {
+            val response = ApiService().createTarjeta(Globales.currentCategoria!!.id.toInt(), 1, tarjeta)
+            if (response.isSuccessful){
+                updateListFlashCards()
+            }
+        }*/
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 tarjetasDao.insertTarjeta(tarjeta)
@@ -294,6 +332,15 @@ class FlashcardsActivity : AppCompatActivity() {
     private fun updateListFlashCards() {
 
         var listaTarjetas = listOf<Tarjeta>()
+
+        /*lifecycleScope.launch {
+            val response = ApiService().getTarjetasByUser(Globales.currentCategoria!!.id.toInt(), 1)
+            if (response.isSuccessful){
+                if (response != null){
+                    response.body()?.let { adapter.actualizarLista(it) }
+                }
+            }
+        }*/
 
         CoroutineScope(Dispatchers.Main).launch {
             listaTarjetas = withContext(Dispatchers.IO) {

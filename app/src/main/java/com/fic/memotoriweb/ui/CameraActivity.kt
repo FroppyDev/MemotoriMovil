@@ -10,6 +10,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -25,9 +26,19 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.fic.memotoriweb.MainActivity
 import com.fic.memotoriweb.R
+import com.fic.memotoriweb.data.db.DatabaseProvider
+import com.fic.memotoriweb.data.db.Fotos
+import com.fic.memotoriweb.data.db.Horarios
+import com.fic.memotoriweb.data.db.SyncStatus
+import com.fic.memotoriweb.data.imageControl.ImageManager
 import com.fic.memotoriweb.databinding.ActivityCameraBinding
 import com.fic.memotoriweb.ui.categoryScreen.CategoryActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -45,6 +56,7 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -54,8 +66,8 @@ class CameraActivity : AppCompatActivity() {
         } else {
             ActivityCompat.requestPermissions(
                 this,
-                com.fic.memotoriweb.ui.CameraActivity.REQUIRED_PERMISSIONS,
-                com.fic.memotoriweb.ui.CameraActivity.REQUEST_CODE_PERMISSIONS
+                REQUIRED_PERMISSIONS,
+                REQUEST_CODE_PERMISSIONS
             )
         }
 
@@ -115,14 +127,72 @@ class CameraActivity : AppCompatActivity() {
                     Log.e(TAG, "Photo capture failed: ${exc.message}", exc)
                 }
 
+                @RequiresApi(Build.VERSION_CODES.O)
                 override fun onImageSaved(output: ImageCapture.OutputFileResults){
                     val msg = "Photo capture succeeded: ${output.savedUri}"
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+
+                    var horariosDao = DatabaseProvider.GetDataBase(applicationContext).GetHorariosDao()
+                    val fotosDao = DatabaseProvider.GetDataBase(applicationContext).GetFotosDao()
+                    var horarios: List<Horarios>? = null
+                    CoroutineScope(Dispatchers.IO).launch{
+                        withContext(Dispatchers.IO){
+                            horarios = horariosDao.getAllHorarios()
+                        }
+
+                        if (horarios!!.isNotEmpty()){
+                            for (horario in horarios){
+
+                                if (comprobarHorario(horario)){
+                                    try {
+                                        val img = ImageManager().imageToInternalStorage(applicationContext, output.savedUri!!)
+                                        fotosDao.insertFoto(
+                                            Fotos(
+                                                rutaFoto = img!!,
+                                                fechaHora = LocalDateTime.now().toString(),
+                                                idCategoria = horario.idCategoria,
+                                                userId = 1, //cambiar id a futuro
+                                                latitud = null,
+                                                longitud = null,
+                                                syncStatus = SyncStatus.PENDING_CREATE
+                                            )
+                                        )
+                                        Log.i("Fotos", "foto guardada en " + horario.idCategoria.toString())
+                                    }catch (e: Exception){
+                                        Log.i("error", e.toString())
+                                    }
+                                }
+
+                            }
+                        }
+
+                    }
 
                     finish()
                 }
             }
         )
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun comprobarHorario(
+        horario: Horarios,
+    ): Boolean {
+
+        var horaInicio = java.time.LocalTime.parse(horario.horaInicio)
+        var horaFin = java.time.LocalTime.parse(horario.horaFin)
+
+        val horaActual = java.time.LocalTime.now()
+
+        val dentroDelRango = when {
+            horaInicio.isBefore(horaFin) -> horaActual in horaInicio..horaFin
+            horaInicio.isAfter(horaFin) -> // Ej: horario de noche 22:00 a 05:00
+                horaActual >= horaInicio || horaActual <= horaFin
+            else -> false
+        }
+
+        return dentroDelRango
+
     }
 
     private fun captureVideo() {}

@@ -3,10 +3,12 @@ package com.fic.memotoriweb.ui.flashcardsScreen
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
+import android.net.Uri
 import android.view.View
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.fic.memotoriweb.R
 import com.fic.memotoriweb.data.db.DatabaseProvider
 import com.fic.memotoriweb.data.db.Tarjeta
@@ -15,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class FlashCardsViewHolder(view: View):RecyclerView.ViewHolder(view) {
 
@@ -38,16 +41,20 @@ class FlashCardsViewHolder(view: View):RecyclerView.ViewHolder(view) {
         binding.ivFlashCard.setImageBitmap(null)
 
         if (item.imagen != null){
-            binding.ivFlashCard.setImageURI(item.imagen!!.toUri())
-            binding.cvImage.visibility = View.VISIBLE
-            binding.ivFlashCard.visibility = View.VISIBLE
+            if (item.imagen?.startsWith("http") == true) {
+                Glide.with(binding.root.context)
+                    .load(item.imagen)
+                    .into(binding.ivFlashCard)
+            } else {
+                binding.ivFlashCard.setImageURI(Uri.fromFile(File(item.imagen)))
+            }
 
         } else {
             binding.ivFlashCard.visibility = View.GONE
             binding.cvImage.visibility = View.GONE
         }
 
-        if (item.definicionExtra != ""){
+        if (item.definicionExtra != "" ){
             binding.tvAuxiliar.visibility = View.VISIBLE
         } else {
             binding.tvAuxiliar.visibility = View.GONE

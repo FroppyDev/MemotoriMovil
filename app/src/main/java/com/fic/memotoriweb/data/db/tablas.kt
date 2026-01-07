@@ -6,21 +6,34 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.fic.memotoriweb.R
 
+
 @Entity
+data class Usuario(
+    @PrimaryKey val id: Int,
+    val nombre: String?,
+    val email: String?,
+)
+
+@Entity(tableName = "categoria")
 data class Categoria(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     var nombre: String,
+    val userId: Int,
+    var remoteId: Long? = null,
     var descripcion: String,
     var imagen: String?,
     var color: CategoriaColor = CategoriaColor.MORADO,
     var smart: Boolean = false,
     var latitud: Float?,
     var longitud: Float?,
-    var radioMetros: Int?
+    var radioMetros: Int?,
+    var updatedAt: Long = System.currentTimeMillis(),
+    var syncStatus: SyncStatus
 )
 
 @Entity(
+    tableName = "tarjeta",
     foreignKeys = [ForeignKey(
         entity = Categoria::class,
         parentColumns = ["id"],
@@ -28,15 +41,18 @@ data class Categoria(
         onDelete = ForeignKey.CASCADE
     )]
 )
-
 data class Tarjeta(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: Int,
     var idCategoria: Long,
+    var remoteId: Long? = null,
     var concepto: String?,
     var definicion: String?,
     var definicionExtra:String?,
-    var imagen: String?
+    var imagen: String?,
+    var updatedAt: Long = System.currentTimeMillis(),
+    var syncStatus: SyncStatus
 )
 
 @Entity(
@@ -51,8 +67,11 @@ data class Horarios(
     @PrimaryKey(autoGenerate = true)
     val idHorario: Long = 0,
     val idCategoria: Long,
+    val userId: Int,
     var horaInicio: String,
-    var horaFin: String
+    var horaFin: String,
+    var updatedAt: Long = System.currentTimeMillis(),
+    var syncStatus: SyncStatus
 )
 
 @Entity
@@ -81,7 +100,10 @@ data class Dias(
 )
 data class Categoria_Dias(
     val idCategoria: Long,
-    val idDia: Int
+    val userId: Int,
+    val idDia: Int,
+    var updatedAt: Long = System.currentTimeMillis(),
+    var syncStatus: SyncStatus
 )
 
 @Entity(
@@ -96,8 +118,11 @@ data class Imagenes(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val idCategoria: Long,
+    val userId: Long,
     var imagen: String,
-    var infoImagen: String
+    var infoImagen: String,
+    var updatedAt: Long = System.currentTimeMillis(),
+    var syncStatus: SyncStatus
 )
 
 @Entity(
@@ -113,11 +138,14 @@ data class Imagenes(
 data class Fotos(
     @PrimaryKey(autoGenerate = true)
     val idFoto: Long = 0,
+    val userId: Long,
     var rutaFoto: String,
     var fechaHora: String,
     val idCategoria: Long,
     var latitud: Float?,
-    var longitud: Float?
+    var longitud: Float?,
+    var updatedAt: Long = System.currentTimeMillis(),
+    var syncStatus: SyncStatus
 )
 
 enum class CategoriaColor(val color: Int?) {
@@ -127,4 +155,11 @@ enum class CategoriaColor(val color: Int?) {
     NEGRO(R.color.bg7),
     ROSA(R.color.bg6),
     SECUNDARIO(R.color.secundary)
+}
+
+enum class SyncStatus {
+    SYNCED,
+    PENDING_CREATE,
+    PENDING_UPDATE,
+    PENDING_DELETE
 }

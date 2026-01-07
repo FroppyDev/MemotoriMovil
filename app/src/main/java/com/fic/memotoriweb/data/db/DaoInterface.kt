@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CategoryDao{
-    @Query("SELECT * FROM Categoria")
-    fun getAllCategorys(): List<Categoria>
+    @Query("SELECT * FROM Categoria WHERE userId = :userId")
+    fun getAllCategorys(userId: Int): List<Categoria>
 
     @Insert
     fun insertCategory(categoria: Categoria) : Long
@@ -24,12 +24,33 @@ interface CategoryDao{
 
     @Query("SELECT * FROM Categoria WHERE id = :id")
     fun getCategoryById(id: Long): Categoria
+
+    @Query("SELECT * FROM categoria WHERE syncStatus != 'SYNCED'")
+    suspend fun getPendientes(): List<Categoria>
+
+    // 🔹 Insertar desde servidor
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(categories: List<Categoria>)
+
+    @Query("SELECT * FROM Categoria WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: Int): Categoria?
+
+
 }
 
 @Dao
 interface TarjetasDao{
     @Query("SELECT * FROM Tarjeta WHERE idCategoria = :idCategoria")
     fun getAllTarjetas(idCategoria: Long): List<Tarjeta>
+
+    @Query("SELECT * FROM Tarjeta WHERE syncStatus != 'SYNCED'")
+    fun getPending(): List<Tarjeta>
+
+    @Query("SELECT * FROM Tarjeta WHERE idCategoria = :idCategoria")
+    fun getTarjetasById(idCategoria: Long): List<Tarjeta>
+
+    @Query("SELECT * FROM tarjeta WHERE remoteId = :remoteId LIMIT 1")
+    suspend fun getByRemoteId(remoteId: Int): Tarjeta?
 
     @Insert
     fun insertTarjeta(tarjeta: Tarjeta)
@@ -81,7 +102,7 @@ interface DiasDao{
 @Dao
 interface FotosDao{
     @Query("SELECT * FROM Fotos WHERE idCategoria = :idCategoria")
-    fun getAllFotos(idCategoria: Long): Flow<List<Fotos>>
+    fun getAllFotos(idCategoria: Long): List<Fotos>
 
     @Insert
     fun insertFoto(foto: Fotos)
