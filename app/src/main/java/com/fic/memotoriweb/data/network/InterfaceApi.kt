@@ -1,5 +1,6 @@
 package com.fic.memotoriweb.data.network
 
+import androidx.room.Update
 import com.fic.memotoriweb.data.db.Categoria
 import com.fic.memotoriweb.data.db.Tarjeta
 import okhttp3.MultipartBody
@@ -9,6 +10,7 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -43,8 +45,21 @@ interface InterfaceApi {
     @POST("/decks/{id}")
     suspend fun createCategory(@Path("id") id: Int, @Body categoria: Categoria): Response<Categoria>
 
+    @PUT("/decks/{deck_id}")
+    suspend fun updateCategory(@Path("deck_id") deckId: Int, @Body categoria: CategoryUpdateModel): Response<Categoria>
+
+    @DELETE("/decks/{userId}/{deck_id}")
+    suspend fun deleteCategory(@Path("deck_id") deckId: Int, @Path("userId") userId: Int): Response<Unit>
+
+
     @POST("/cards/{idCategoria}/{userId}")
     suspend fun createTarjeta(@Path("idCategoria") idCategoria: Int, @Path("userId") userId: Int, @Body tarjeta: TarjetasModel): Response<TarjetasResponse>
+
+    @DELETE("/cards/deck/{categoryId}/{tarjeta_id}")
+    suspend fun deleteTarjeta(@Path("categoryId") categoryId: Int, @Path("tarjeta_id") tarjetaId: Int): Response<Unit>
+
+    @PUT("/cards/{tarjeta_id}")
+    suspend fun updateTarjeta(@Path("tarjeta_id") tarjetaId: Int, @Body tarjeta: TarjetasModel): Response<TarjetasResponse>
 
     @Multipart
     @POST("/upload-image/")

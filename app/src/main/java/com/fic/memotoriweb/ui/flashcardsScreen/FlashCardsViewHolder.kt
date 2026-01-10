@@ -11,7 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.fic.memotoriweb.R
 import com.fic.memotoriweb.data.db.DatabaseProvider
+import com.fic.memotoriweb.data.db.SyncStatus
 import com.fic.memotoriweb.data.db.Tarjeta
+import com.fic.memotoriweb.data.network.SyncRepository
 import com.fic.memotoriweb.databinding.FlashcardItemBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,7 +30,6 @@ class FlashCardsViewHolder(view: View):RecyclerView.ViewHolder(view) {
     fun render(
         item: Tarjeta,
         onItemSelected: (Tarjeta, position: Int) -> Unit,
-        onDataChanged: (() -> Unit)?,
         position: Int
     ) {
         binding.tvConcepto.text = item.concepto
@@ -65,7 +66,7 @@ class FlashCardsViewHolder(view: View):RecyclerView.ViewHolder(view) {
         }
 
         binding.cvPadre.setOnLongClickListener {
-            OpcionesFlashcardDialog(binding.root.context, item, onDataChanged)
+            OpcionesFlashcardDialog(binding.root.context, item)
             true
         }
 
@@ -74,7 +75,7 @@ class FlashCardsViewHolder(view: View):RecyclerView.ViewHolder(view) {
         }
     }
 
-    private fun OpcionesFlashcardDialog(context: Context, tarjeta: Tarjeta, onDataChanged: (() -> Unit)?){
+    private fun OpcionesFlashcardDialog(context: Context, tarjeta: Tarjeta){
 
         var dialog = Dialog(context)
         var vista = R.layout.category_options_dialog
@@ -85,16 +86,21 @@ class FlashCardsViewHolder(view: View):RecyclerView.ViewHolder(view) {
 
         btnEliminar.setOnClickListener {
             CoroutineScope(Dispatchers.IO).launch {
-                withContext(Dispatchers.IO){
-                    tarjetasDao.deleteFlashcard(tarjeta)
-                }.let {
-                    onDataChanged?.invoke()
+
+                tarjetasDao.updateFlashcard(
+                    tarjeta.copy(
+                        syncStatus = SyncStatus.PENDING_DELETE
+                    )
+                )
+
+                SyncRepository(context.applicationContext).enqueueSync()
+
+                withContext(Dispatchers.Main) {
+                    dialog.dismiss()
                 }
-
-                dialog.dismiss()
-
             }
         }
+
 
         btnCompartir.setOnClickListener {
 

@@ -35,6 +35,13 @@ interface CategoryDao{
     @Query("SELECT * FROM Categoria WHERE remoteId = :remoteId LIMIT 1")
     suspend fun getByRemoteId(remoteId: Int): Categoria?
 
+    @Query("""
+SELECT * FROM categoria 
+WHERE userId = :userId AND syncStatus != 'PENDING_DELETE'
+ORDER BY id DESC
+""")
+    fun observeCategories(userId: Int): Flow<List<Categoria>>
+
 
 }
 
@@ -60,6 +67,9 @@ interface TarjetasDao{
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun updateFlashcard(tarjeta: Tarjeta)
+
+    @Query("SELECT * FROM tarjeta WHERE idCategoria = :categoriaId")
+    fun observeTarjetas(categoriaId: Long): Flow<List<Tarjeta>>
 }
 
 

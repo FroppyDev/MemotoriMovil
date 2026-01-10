@@ -9,7 +9,6 @@ import com.fic.memotoriweb.data.db.Tarjeta
 class FlashCardsAdapter(
     var flashCardList: List<Tarjeta>? = null,
     var onItemSelected: (Tarjeta, position: Int) -> Unit,
-    var onDataChanged: (() -> Unit)? = null
 ) : RecyclerView.Adapter<FlashCardsViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FlashCardsViewHolder {
         var layoutInflater = LayoutInflater.from(parent.context)
@@ -22,15 +21,11 @@ class FlashCardsAdapter(
 
     override fun onBindViewHolder(holder: FlashCardsViewHolder, position: Int) {
         var item = flashCardList!![position]
-        holder.render(item, onItemSelected, onDataChanged, position)
+        holder.render(item, onItemSelected, position)
     }
 
     fun actualizarLista(flashCardList: List<Tarjeta>) {
         this.flashCardList = flashCardList
         notifyDataSetChanged()
-    }
-
-    fun actualizarItem(position: Int) {
-        notifyItemChanged(position)
     }
 }

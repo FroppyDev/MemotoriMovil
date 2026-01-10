@@ -42,12 +42,38 @@ class ApiService {
         return response
     }
 
+    suspend fun updateCategory(deckId: Int, categoria: CategoryUpdateModel): Response<Categoria> {
+        val response = call.updateCategory(deckId, categoria)
+        return response
+    }
+
+    suspend fun deleteCategory(deckId: Int, userId: Int): Response<Unit>{
+        val response = call.deleteCategory(deckId, userId)
+        return response
+    }
+
     suspend fun createTarjeta(
         idCategoriaRemota: Int,
         userId: Int,
         tarjeta: TarjetasModel
     ): Response<TarjetasResponse> {
         val response = call.createTarjeta(idCategoriaRemota, userId, tarjeta)
+        return response
+    }
+
+    suspend fun deleteTarjeta(
+        categoryId: Int,
+        tarjetaId: Int
+    ): Response<Unit> {
+        val response = call.deleteTarjeta(categoryId, tarjetaId)
+        return response
+    }
+
+    suspend fun updateTarjeta(
+        tarjetaId: Int,
+        tarjeta: TarjetasModel
+    ): Response<TarjetasResponse> {
+        val response = call.updateTarjeta(tarjetaId, tarjeta)
         return response
     }
 

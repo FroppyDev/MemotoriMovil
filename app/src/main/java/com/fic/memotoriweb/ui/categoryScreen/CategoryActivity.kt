@@ -80,7 +80,7 @@ class CategoryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityCategoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initRV(categoriaDao, horariosDao)
+        initRV(categoriaDao)
         initComponents(categoriaDao)
         configSwipe()
         SyncRepository(applicationContext).enqueueSync()
@@ -88,31 +88,8 @@ class CategoryActivity : AppCompatActivity() {
             visualSwipe(true, false)
             delay(1500) // espera a que el sync termine
             visualSwipe(false, true)
-            updateListCategory()
         }
         //initWebData()
-    }
-
-    private fun initWebData() {
-        val listaCategorias = lifecycleScope.launch {
-            val response = ApiService().getCategories(1)
-            Log.i("kevin", response.body().toString())
-            if (response.isSuccessful){
-                adapter = CategoryAdapter(response.body(), onItemSelected = { categoria ->
-                    val intent = Intent(this@CategoryActivity, FlashcardsActivity::class.java)
-                    startActivity(intent).let {
-                        Globales.currentCategoria = categoria
-                    }
-                }, onDataChanged = {
-                    updateListCategory()
-                }, onImageChange = {
-                    mediaPicker.launch("image/*")
-                })
-
-                binding.rvCategory.layoutManager = LinearLayoutManager(this@CategoryActivity)
-                binding.rvCategory.adapter = adapter
-            }
-        }
     }
 
     private fun initComponents(categoriaDao: CategoryDao) {
@@ -128,50 +105,40 @@ class CategoryActivity : AppCompatActivity() {
 
     }
 
-    private fun initRV(categoriaDao: CategoryDao, horarioDao: HorariosDao) {
+    private fun initRV(categoriaDao: CategoryDao) {
 
-        //cambiar user id place holder
-        val listaPrueba = listOf<Categoria>(
-            Categoria(
-                0, "kevin", SyncPrefs(this).getUserId(),null, "kevin", null,
-                CategoriaColor.MORADO, false, null, null, null, syncStatus = SyncStatus.PENDING_CREATE
-            )
+        adapter = CategoryAdapter(
+            onItemSelected = { categoria ->
+                Globales.currentCategoria = categoria
+                startActivity(Intent(this, FlashcardsActivity::class.java))
+            },
+            onDataChanged = {
+                configSwipe()
+            },
+            onImageChange = {
+                mediaPicker.launch("image/*")
+            }
         )
 
-        CoroutineScope(Dispatchers.Main).launch {
+        binding.rvCategory.layoutManager = LinearLayoutManager(this)
+        binding.rvCategory.adapter = adapter
 
-            val listaCategorias = withContext(Dispatchers.IO) {
-                categoriaDao.getAllCategorys(SyncPrefs(applicationContext).getUserId())
-            }
+        // 🔥 OBSERVADOR AUTOMÁTICO
+        lifecycleScope.launch {
+            categoriaDao
+                .observeCategories(SyncPrefs(this@CategoryActivity).getUserId())
+                .collect { categorias ->
 
-            val listaHorarios = withContext(Dispatchers.IO){
-                horarioDao.getAllHorarios()
-            }.let {
-                Log.i("horarios", it.toString())
-                Log.i("horarios", listaCategorias.toString())
-            }
+                    adapter.submitList(categorias)
 
-            if (listaCategorias.isNotEmpty()){
-                binding.tvTextoInicial.visibility = View.GONE
-            }
+                    // 👁 Mostrar texto vacío
+                    binding.tvTextoInicial.visibility =
+                        if (categorias.isEmpty()) View.VISIBLE else View.GONE
 
-            adapter = CategoryAdapter(listaCategorias, onItemSelected = { categoria ->
-
-                val intent = Intent(this@CategoryActivity, FlashcardsActivity::class.java)
-                startActivity(intent).let {
-                    Globales.currentCategoria = categoria
                 }
-
-            }, onDataChanged = {
-                updateListCategory()
-            }, onImageChange = {
-                mediaPicker.launch("image/*")
-            })
-
-            binding.rvCategory.layoutManager = LinearLayoutManager(this@CategoryActivity)
-            binding.rvCategory.adapter = adapter
         }
     }
+
 
     private fun DialogType(categoriaDao: CategoryDao, horariosDao: HorariosDao, context: Context) {
         Log.i("kevdev", "dialogType")
@@ -341,7 +308,6 @@ class CategoryActivity : AppCompatActivity() {
                     horaFin = horaFin,
                     syncStatus = SyncStatus.PENDING_CREATE
                 ), categoriaDao, horariosDao).let {
-                    updateListCategory()
                     dialog.dismiss()
                 }
             }
@@ -456,8 +422,8 @@ class CategoryActivity : AppCompatActivity() {
                 ),
                 categoriaDao
             ).let {
-                SyncRepository(applicationContext).enqueueSync()
-                updateListCategory()
+
+                SyncRepository(this).enqueueSync()
                 dialog.dismiss()
             }
         }
@@ -478,47 +444,8 @@ class CategoryActivity : AppCompatActivity() {
             }
 
         }
-
-        /*lifecycleScope.launch {
-
-            val response = ApiService().createCategory(1, categoria)
-            Log.i("kevin", response.body().toString())
-            if (response.isSuccessful) {
-                updateDataWeb()
-            }
-        }*/
-
     }
 
-    private fun updateDataWeb() {
-
-        lifecycleScope.launch {
-
-            val response = ApiService().getCategories(SyncPrefs(applicationContext).getUserId())
-            if (response.isSuccessful){
-                if (response != null){
-                    response.body()?.let { adapter.actualizarLista(it) }
-                }
-            }
-
-        }
-
-
-    }
-
-    private fun updateListCategory() {
-
-        var listaCategorias = listOf<Categoria>()
-
-        CoroutineScope(Dispatchers.Main).launch {
-            listaCategorias = withContext(Dispatchers.IO) {
-                categoriaDao.getAllCategorys(SyncPrefs(applicationContext).getUserId())
-            }
-
-            adapter.actualizarLista(listaCategorias)
-
-        }
-    }
 
     private fun visualSwipe(isRefreshing: Boolean, isSwipeEnabled: Boolean){
 
@@ -530,11 +457,40 @@ class CategoryActivity : AppCompatActivity() {
     private fun configSwipe() {
 
         binding.srCategories.setOnRefreshListener {
+            if (!hayInternet()) {
+                binding.srCategories.isRefreshing = true
+
+                Handler(Looper.getMainLooper()).postDelayed({
+                    binding.srCategories.isRefreshing = false
+
+                    Toast.makeText(
+                        this,
+                        "Sin conexión. Se sincronizará automáticamente cuando haya internet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                }, 1200)
+
+                return@setOnRefreshListener
+            }
+
             SyncRepository(applicationContext).enqueueSync()
-            updateListCategory()
+
             Handler(Looper.getMainLooper()).postDelayed({
                 binding.srCategories.isRefreshing = false
-            }, 2000)
+            }, 1200)
         }
     }
+
+
+    private fun hayInternet(): Boolean {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
+
 }

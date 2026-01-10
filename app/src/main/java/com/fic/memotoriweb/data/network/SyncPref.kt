@@ -12,6 +12,7 @@ class SyncPrefs(context: Context) {
     companion object {
         private const val KEY_LAST_SYNC = "last_sync"
         private const val USER_ID = "user_id"
+        private const val KEY_SYNC_RUNNING = "sync_running"
     }
 
     fun getLastSync(): Long {
@@ -32,5 +33,13 @@ class SyncPrefs(context: Context) {
         prefs.edit()
             .putInt(USER_ID, userId)
             .apply()
+    }
+
+    fun setSyncRunning(running: Boolean) {
+        prefs.edit().putBoolean(KEY_SYNC_RUNNING, running).apply()
+    }
+
+    fun isSyncRunning(): Boolean {
+        return prefs.getBoolean(KEY_SYNC_RUNNING, false)
     }
 }

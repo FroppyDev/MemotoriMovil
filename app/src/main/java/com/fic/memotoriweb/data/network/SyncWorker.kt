@@ -11,6 +11,7 @@ import com.fic.memotoriweb.data.db.Categoria
 import com.fic.memotoriweb.data.db.DatabaseProvider
 import com.fic.memotoriweb.data.db.SyncStatus
 import com.fic.memotoriweb.data.db.Tarjeta
+import kotlinx.coroutines.sync.withLock
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -27,15 +28,25 @@ class SyncWorker(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override suspend fun doWork(): Result {
-        try {
-            syncLocalCategoriesToServer(db, applicationContext)
-            syncLocalTarjetasToServer(db, applicationContext)
-            syncServerCategoriesToLocal(db, applicationContext)
-            syncServerTarjetasToLocal(db, applicationContext)
-            SyncPrefs(applicationContext).saveLastSync()
-            return Result.success()
-        } catch (e: Exception) {
-            return Result.retry()
+
+        SyncPrefs(applicationContext).setSyncRunning(true)
+
+        return SyncRepository.SyncLock.mutex.withLock {
+            try {
+                syncLocalCategoriesToServer(db, applicationContext)
+                syncServerCategoriesToLocal(db, applicationContext)
+                syncLocalTarjetasToServer(db, applicationContext)
+                syncServerTarjetasToLocal(db, applicationContext)
+
+                SyncPrefs(applicationContext).saveLastSync()
+
+                Result.success()
+            } catch (e: Exception) {
+                Log.e("SYNC", "Error en sync", e)
+                Result.retry()
+            } finally {
+                SyncPrefs(applicationContext).setSyncRunning(false)
+            }
         }
     }
 }
@@ -44,6 +55,7 @@ suspend fun syncLocalCategoriesToServer(db: AppDatabase, applicationContext: Con
     val categoriaDao = db.GetCategoryDao()
     val tarjetaDao = db.GetTarjetasDao()
     val pendientes = categoriaDao.getPendientes()
+    Log.i("SYNC", "Categorias pendientes: " + pendientes.toString())
     val tarjetasPendientes = tarjetaDao.getPending()
     val api = ApiService()
 
@@ -82,14 +94,80 @@ suspend fun syncLocalCategoriesToServer(db: AppDatabase, applicationContext: Con
                 categoria.remoteId = remoteCategoriaId
                 categoria.imagen = imageUrl
                 categoria.syncStatus = SyncStatus.SYNCED
+                categoria.updatedAt = System.currentTimeMillis()
                 categoriaDao.updateCategory(categoria)
             }
 
-            SyncStatus.PENDING_UPDATE -> TODO()
+            SyncStatus.PENDING_UPDATE -> {
 
-            SyncStatus.PENDING_DELETE -> TODO()
+                if (categoria.remoteId == null) {
+                    return@forEach
+                }
 
-            SyncStatus.SYNCED -> TODO()
+                var imageUrl = categoria.imagen
+
+                if (!imageUrl.isNullOrEmpty() && !imageUrl.startsWith("http")) {
+                    imageUrl = uploadImageIfNeeded(
+                        applicationContext,
+                        imageUrl
+                    )
+
+                    if (imageUrl == null) return@forEach
+                }
+
+                val categoriaParaServidor = CategoryUpdateModel(
+                    nombre = categoria.nombre,
+                    descripcion = categoria.descripcion,
+                    imagen = imageUrl,
+                    latitud = categoria.latitud,
+                    longitud = categoria.longitud,
+                    radioMetros = categoria.radioMetros,
+                    smart = categoria.smart,
+                    id = categoria.remoteId!!,
+                    userId = categoria.userId,
+                )
+
+                val response = api.updateCategory(
+                    categoria.remoteId!!.toInt(),
+                    categoriaParaServidor
+                )
+
+                if (!response.isSuccessful) {
+                    Log.e("SYNC", "Error actualizando categoría ${categoria.id}")
+                    Log.e("SYNC", response.errorBody()?.string() ?: "error")
+                    return@forEach
+                }
+
+                categoria.imagen = imageUrl
+                categoria.syncStatus = SyncStatus.SYNCED
+                categoriaDao.updateCategory(categoria)
+
+            }
+
+            SyncStatus.PENDING_DELETE -> {
+                // Si nunca se sincronizó con el servidor
+                if (categoria.remoteId == null) {
+                    categoriaDao.deleteCategory(categoria)
+                    return@forEach
+                }
+
+                val response = api.deleteCategory(
+                    categoria.remoteId!!.toInt(),
+                    categoria.userId
+                )
+
+                // ✅ Si se borró O ya no existe, eliminamos local
+                if (response.isSuccessful || response.code() == 404) {
+                    categoriaDao.deleteCategory(categoria)
+                } else {
+                    Log.e(
+                        "SYNC",
+                        "Error eliminando categoría remota ${categoria.remoteId}: ${response.errorBody()?.string()}"
+                    )
+                }
+            }
+
+            SyncStatus.SYNCED -> Unit
         }
     }
 }
@@ -156,9 +234,69 @@ suspend fun syncLocalTarjetasToServer(db: AppDatabase, applicationContext: Conte
                 }
             }
 
-            SyncStatus.PENDING_UPDATE -> TODO()
+            SyncStatus.PENDING_UPDATE -> {
 
-            SyncStatus.PENDING_DELETE -> TODO()
+                if (tarjeta.remoteId == null) return@forEach
+
+                var imageUrl = tarjeta.imagen
+
+                // 📤 Subir imagen si es local
+                if (!imageUrl.isNullOrEmpty() && !imageUrl.startsWith("http")) {
+                    imageUrl = uploadImageIfNeeded(
+                        applicationContext,
+                        imageUrl
+                    )
+
+                    if (imageUrl == null) return@forEach
+                }
+
+                val tarjetaUpdate = TarjetasModel(
+                    concepto = tarjeta.concepto,
+                    definicion = tarjeta.definicion,
+                    definicionExtra = tarjeta.definicionExtra,
+                    imagen = imageUrl,
+                )
+
+                val response = api.updateTarjeta(
+                    tarjeta.remoteId!!.toInt(),
+                    tarjetaUpdate
+                )
+
+                if (response.isSuccessful) {
+                    tarjeta.imagen = imageUrl
+                    tarjeta.syncStatus = SyncStatus.SYNCED
+                    tarjeta.updatedAt = System.currentTimeMillis()
+                    tarjetaDao.updateFlashcard(tarjeta)
+                } else {
+                    Log.e(
+                        "SYNC",
+                        "Error actualizando tarjeta ${tarjeta.remoteId}: ${response.errorBody()?.string()}"
+                    )
+                }
+            }
+
+            SyncStatus.PENDING_DELETE -> {
+                // Nunca se subió → solo borrar local
+                if (tarjeta.remoteId == null) {
+                    tarjetaDao.deleteFlashcard(tarjeta)
+                    return@forEach
+                }
+
+                val response = api.deleteTarjeta(
+                    tarjeta.idCategoria.toInt(),
+                    tarjeta.remoteId!!.toInt()
+                )
+
+                // ✅ Si se borró o ya no existe
+                if (response.isSuccessful || response.code() == 404) {
+                    tarjetaDao.deleteFlashcard(tarjeta)
+                } else {
+                    Log.e(
+                        "SYNC",
+                        "Error eliminando tarjeta remota ${tarjeta.remoteId}: ${response.errorBody()?.string()}"
+                    )
+                }
+            }
 
             else -> Unit
         }

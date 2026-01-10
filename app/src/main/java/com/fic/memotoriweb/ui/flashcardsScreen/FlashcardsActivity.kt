@@ -27,6 +27,7 @@ import com.fic.memotoriweb.data.db.Tarjeta
 import com.fic.memotoriweb.data.db.TarjetasDao
 import com.fic.memotoriweb.data.imageControl.ImageManager
 import com.fic.memotoriweb.data.network.ApiService
+import com.fic.memotoriweb.data.network.SyncPrefs
 import com.fic.memotoriweb.data.network.SyncRepository
 import com.fic.memotoriweb.databinding.ActivityFlashcardsBinding
 import com.fic.memotoriweb.ui.modosDeJuego.GameManager
@@ -69,54 +70,33 @@ class FlashcardsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityFlashcardsBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initRV(Globales.currentCategoria!!, tarjetasDao)
+        initRV(Globales.currentCategoria!!)
         initComponents(Globales.currentCategoria!!, tarjetasDao)
-        //initWebData(Globales.currentCategoria!!)
     }
 
-    private fun initWebData(categoria: Categoria) {
+    private fun initRV(categoria: Categoria) {
 
-        binding.tvTituloCategoria.text = categoria.nombre
-        binding.tvDescripcionCategoria.text = categoria.descripcion
-
-        val listaTarjetas = lifecycleScope.launch {
-            val response = ApiService().getTarjetasByUser(Globales.currentCategoria!!.id.toInt(), 1)
-            Log.i("kevin", response.body().toString())
-            if (response.isSuccessful){
-                adapter = FlashCardsAdapter(response.body(), onItemSelected = { tarjeta, position ->
-                    ModificarDialog(tarjeta, response.body()!!, position)
-                }, onDataChanged = {
-                    updateListFlashCards()
-                })
-
-                binding.rvFlashCards.layoutManager = LinearLayoutManager(this@FlashcardsActivity)
-                binding.rvFlashCards.adapter = adapter
+        adapter = FlashCardsAdapter(
+            emptyList(),
+            onItemSelected = { tarjeta, position ->
+                ModificarDialog(tarjeta)
             }
-        }
-    }
+        )
 
-    private fun initRV(categoria: Categoria, tarjetasDao: TarjetasDao) {
+        binding.rvFlashCards.layoutManager = LinearLayoutManager(this)
+        binding.rvFlashCards.adapter = adapter
 
-        CoroutineScope(Dispatchers.IO).launch {
-            var listaTarjetas = withContext(Dispatchers.IO) {
-                tarjetasDao.getAllTarjetas(categoria.id)
-            }
+        lifecycleScope.launch {
+            tarjetasDao.observeTarjetas(categoria.id)
+                .collect { listaTarjetas ->
 
-            Log.i("Tarjetas", listaTarjetas.toString())
-            adapter = FlashCardsAdapter(listaTarjetas, onItemSelected = { tarjeta, position ->
-                ModificarDialog(tarjeta, listaTarjetas, position)
-            }, onDataChanged = {
-                updateListFlashCards()
-            })
+                    Log.i("Tarjetas", "Observer emitió ${listaTarjetas.size} tarjetas")
 
-            if (listaTarjetas.isNotEmpty()) {
-                binding.tvTextoInicial.visibility = GONE
-            } else {
-                binding.tvTextoInicial.visibility = View.VISIBLE
-            }
+                    adapter.actualizarLista(listaTarjetas)
 
-            binding.rvFlashCards.layoutManager = LinearLayoutManager(this@FlashcardsActivity)
-            binding.rvFlashCards.adapter = adapter
+                    binding.tvTextoInicial.visibility =
+                        if (listaTarjetas.isEmpty()) View.VISIBLE else View.GONE
+                }
         }
     }
 
@@ -149,7 +129,7 @@ class FlashcardsActivity : AppCompatActivity() {
         }
     }
 
-    private fun ModificarDialog(tarjeta: Tarjeta, listaTarjeta: List<Tarjeta>, position: Int) {
+    private fun ModificarDialog(tarjeta: Tarjeta) {
         val dialog = Dialog(this)
         val vista = R.layout.flashcard_dialog
         dialog.setContentView(vista)
@@ -195,9 +175,11 @@ class FlashcardsActivity : AppCompatActivity() {
                     concepto = etConcepto.text.toString(),
                     definicion = etDefinicion.text.toString(),
                     definicionExtra = etDefinicionExtra.text.toString(),
-                    imagen = img
+                    imagen = img,
+                    syncStatus = SyncStatus.PENDING_UPDATE
                 ), tarjetasDao
             ).let {
+                triggerSync()
                 updateListFlashCards()
                 dialog.dismiss()
             }
@@ -205,10 +187,6 @@ class FlashcardsActivity : AppCompatActivity() {
 
         dialog.show()
 
-    }
-
-    private fun updateFlashCardView(tarjeta: Tarjeta, listaTarjetas: List<Tarjeta>) {
-        adapter.actualizarItem(listaTarjetas.indexOf(tarjeta))
     }
 
     private fun CrearTarjetaDialog(tarjetasDao: TarjetasDao) {
@@ -240,7 +218,7 @@ class FlashcardsActivity : AppCompatActivity() {
             CrearTarjeta(
                 Tarjeta(
                     idCategoria = Globales.currentCategoria!!.id,
-                    userId = 1, //cambiar id a futuro
+                    userId = SyncPrefs(this).getUserId(),
                     concepto = etConcepto.text.toString(),
                     definicion = etDefinicion.text.toString(),
                     definicionExtra = etDefinicionExtra.text.toString(),
@@ -248,7 +226,7 @@ class FlashcardsActivity : AppCompatActivity() {
                     syncStatus = SyncStatus.PENDING_CREATE
                 ), tarjetasDao
             ).let {
-                SyncRepository(applicationContext).enqueueSync()
+                triggerSync()
                 updateListFlashCards()
                 dialog.dismiss()
             }
@@ -258,13 +236,6 @@ class FlashcardsActivity : AppCompatActivity() {
     }
 
     private fun CrearTarjeta(tarjeta: Tarjeta, tarjetasDao: TarjetasDao) {
-
-        /*lifecycleScope.launch {
-            val response = ApiService().createTarjeta(Globales.currentCategoria!!.id.toInt(), 1, tarjeta)
-            if (response.isSuccessful){
-                updateListFlashCards()
-            }
-        }*/
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -333,24 +304,21 @@ class FlashcardsActivity : AppCompatActivity() {
 
         var listaTarjetas = listOf<Tarjeta>()
 
-        /*lifecycleScope.launch {
-            val response = ApiService().getTarjetasByUser(Globales.currentCategoria!!.id.toInt(), 1)
-            if (response.isSuccessful){
-                if (response != null){
-                    response.body()?.let { adapter.actualizarLista(it) }
-                }
-            }
-        }*/
-
         CoroutineScope(Dispatchers.Main).launch {
             listaTarjetas = withContext(Dispatchers.IO) {
                 tarjetasDao.getAllTarjetas(Globales.currentCategoria?.id!!)
             }
 
             adapter.actualizarLista(listaTarjetas)
+            triggerSync()
 
         }
     }
+
+    private fun triggerSync() {
+        SyncRepository(applicationContext).enqueueSync()
+    }
+
 
     private fun IniciarJuego(mode: GameManager) {
         intent = Intent(this, TestActivity::class.java)

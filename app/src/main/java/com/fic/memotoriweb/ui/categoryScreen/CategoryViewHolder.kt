@@ -20,7 +20,9 @@ import com.fic.memotoriweb.data.db.Categoria
 import com.fic.memotoriweb.data.db.CategoriaColor
 import com.fic.memotoriweb.data.db.CategoryDao
 import com.fic.memotoriweb.data.db.DatabaseProvider
+import com.fic.memotoriweb.data.db.SyncStatus
 import com.fic.memotoriweb.data.imageControl.ImageManager
+import com.fic.memotoriweb.data.network.SyncRepository
 import com.fic.memotoriweb.databinding.CategoryItemBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -110,7 +112,8 @@ class CategoryViewHolder(view: View):RecyclerView.ViewHolder(view) {
 
         CoroutineScope(Dispatchers.IO).launch {
 
-            categoryDao.deleteCategory(categoria)
+            categoryDao.updateCategory(categoria.copy(syncStatus = SyncStatus.PENDING_DELETE))
+            SyncRepository(binding.root.context).enqueueSync()
 
         }
 
@@ -217,7 +220,8 @@ class CategoryViewHolder(view: View):RecyclerView.ViewHolder(view) {
                 nombre = tilConcepto.text.toString(),
                 descripcion = tilDescripcion.text.toString(),
                 color = currentColor,
-                imagen = img
+                imagen = img,
+                syncStatus = SyncStatus.PENDING_UPDATE
 
             ), onDataChanged).let {
                 onDataChanged?.invoke()
@@ -233,13 +237,10 @@ class CategoryViewHolder(view: View):RecyclerView.ViewHolder(view) {
         categoria: Categoria,
         onDataChanged: (() -> Unit)?
     ){
-        CoroutineScope(Dispatchers.IO).launch{
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                categoryDao.updateCategory(categoria).let {
-                    onDataChanged?.invoke()
-                }
-                Log.i("kevindev", "updateCategory")
-
+                categoryDao.updateCategory(categoria)
+                SyncRepository(binding.root.context).enqueueSync() // 🔥 AQUÍ
             } catch (e: Exception){
                 Log.i("errorCategoryViewHolder", e.toString())
             }
